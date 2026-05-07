@@ -3,6 +3,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   release:
@@ -29,15 +30,20 @@ jobs:
 
       - name: Install Cross
         uses: cargo-bins/cargo-binstall@main
-        with:
-          packages: cross
+      - run: cargo binstall -y cross
 
       - name: Build
         run: |
-          if [ "${{ matrix.build_type }}" = "release" ]; then
-            cross build --release --target ${{ matrix.target }}
+          if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
+            CMD="cargo"
           else
-            cross build --target ${{ matrix.target }}
+            CMD="cross"
+          fi
+          
+          if [ "${{ matrix.build_type }}" = "release" ]; then
+            $CMD build --release --target ${{ matrix.target }} --all-features
+          else
+            $CMD build --target ${{ matrix.target }} --all-features
           fi
 
       - name: Package
